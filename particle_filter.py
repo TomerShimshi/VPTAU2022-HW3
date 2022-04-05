@@ -8,7 +8,7 @@ import matplotlib.patches as patches
 
 
 # change IDs to your IDs.
-ID1 = "123456789"
+ID1 = "203200480"
 ID2 = "987654321"
 
 ID = "HW3_{0}_{1}".format(ID1, ID2)
@@ -28,6 +28,8 @@ s_initial = [297,    # x center
                0]    # velocity y
 
 
+sigma_x =2.5
+sigma_y =2.5
 def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """Progress the prior state with time and add noise.
 
@@ -43,6 +45,9 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     state_drifted = s_prior
     """ DELETE THE LINE ABOVE AND:
     INSERT YOUR CODE HERE."""
+    # we just add noise to the current state
+    state_drifted[0] = state_drifted[0] + state_drifted[4] + np.random.normal(0, sigma_x)
+    state_drifted[1] = state_drifted[1] + state_drifted[5] + np.random.normal(0, sigma_y)
     state_drifted = state_drifted.astype(int)
     return state_drifted
 
