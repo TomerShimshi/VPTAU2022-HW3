@@ -46,8 +46,11 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """ DELETE THE LINE ABOVE AND:
     INSERT YOUR CODE HERE."""
     # we just add noise to the current state
-    state_drifted[0] = state_drifted[0] + state_drifted[4] + np.random.normal(0, sigma_x)
-    state_drifted[1] = state_drifted[1] + state_drifted[5] + np.random.normal(0, sigma_y)
+    state_drifted[0, :] = state_drifted[0] + state_drifted[4] + np.random.normal(0, sigma_x, size=(1, 100))
+    state_drifted[1, :] = state_drifted[1] + state_drifted[5] + np.random.normal(0, sigma_y, size=(1, 100))
+    #not sure abot this
+    state_drifted[4, :] = state_drifted[0] + state_drifted[4] + np.random.normal(0, sigma_x, size=(1, 100))
+    state_drifted[5, :] = state_drifted[1] + state_drifted[5] + np.random.normal(0, sigma_y, size=(1, 100))
     state_drifted = state_drifted.astype(int)
     return state_drifted
 
@@ -67,6 +70,18 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     hist = np.zeros(1, 16 * 16 * 16)
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
+    
+    x,y,hight,widthe = state[0],state[1],state[2],state[3]
+    croped_image = image[ x- widthe: x + widthe, y- hight: y + hight,]
+    # Using cv2.split() to split channels of coloured image 
+    b,g,r = cv2.split(croped_image)
+    for i in range(len(croped_image [0])):
+        for j in range (len(croped_image[1])):
+            hist[b[i,j],g[i,j],r[i,j]] +=1
+    
+
+
+
     hist = np.reshape(hist, 16 * 16 * 16)
 
     # normalize
