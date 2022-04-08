@@ -89,12 +89,12 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
             temp_b = b[i,j]
             temp_r = r[i,j]
             temp_g = g[i,j]
-            hist[b[i,j],g[i,j],r[i,j]] +=1
+            hist[b[i,j]][g[i,j]][r[i,j]] +=1
     
 
 
 
-    hist = np.reshape(hist, 16 * 16 * 16)
+    hist = hist.flatten() #np.reshape(hist, 16 * 16 * 16)
 
     # normalize
     hist = hist/np.sum(hist)
