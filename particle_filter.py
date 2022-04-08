@@ -29,10 +29,10 @@ s_initial = [297,    # x center
                0]    # velocity y
 
 
-sigma_x =2
-sigma_y =2
-sigma_vx =0.5
-sigma_vy =0.5
+sigma_x =2.5
+sigma_y =2.5
+sigma_vx =0.8
+sigma_vy =0.8
 
 def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """Progress the prior state with time and add noise.
@@ -78,7 +78,7 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     max_higt,max_width,_ = image.shape
 
     x,y,hight,widthe =state[0],state[1],state[2],state[3]
-    croped_image = image[ max(y- hight,1):min( y + hight,max_higt-1), max(x- widthe,1): min(x + widthe, max_width-1 ), :]
+    croped_image = image[ max(y- hight,1):min( y + hight,max_higt-1), max(x- widthe,1): min(x + widthe, max_width-1 )]
     # Using cv2.split() to split channels of coloured image 
     b,g,r = cv2.split(croped_image)
     b = b//16
@@ -158,8 +158,8 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
         INSERT YOUR CODE HERE."""
     (x_avg, y_avg, w_avg, h_avg) = (0, 0, state[2][0]*2, state[3][0]*2)
     for index,partical in enumerate(state.T):
-        x_avg = partical[0]* W[index]
-        y_avg = partical[1]* W[index]
+        x_avg += partical[0]* W[index]
+        y_avg += partical[1]* W[index]
     x_avg = x_avg - w_avg/2
     y_avg -= h_avg/2
     rect = patches.Rectangle((x_avg, y_avg), w_avg, h_avg, linewidth=1, edgecolor='g', facecolor='none')
@@ -200,11 +200,12 @@ def calculate_C (W):
     '''
     this function recives the whigthes and calculTE THE CDF
     ''' 
-    c = np.zeros(len(W))
+    #c = np.zeros(len(W))
+    c = [0 for i in range(len(W))]
     c[0]=W[0]
     for i in range(1,len(W)):
         c[i]+= W[i]+c[i-1]
-    return c
+    return np.array(c)
  
 
 def main():
