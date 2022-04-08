@@ -1,5 +1,6 @@
 import json
 import os
+from turtle import shape
 import cv2
 import numpy as np
 import numpy.matlib
@@ -28,8 +29,11 @@ s_initial = [297,    # x center
                0]    # velocity y
 
 
-sigma_x =2.5
-sigma_y =2.5
+sigma_x =2
+sigma_y =2
+sigma_vx =0.5
+sigma_vy =0.5
+
 def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """Progress the prior state with time and add noise.
 
@@ -46,11 +50,11 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """ DELETE THE LINE ABOVE AND:
     INSERT YOUR CODE HERE."""
     # we just add noise to the current state
-    state_drifted[0, :] = state_drifted[0] + state_drifted[4] + np.random.normal(0, sigma_x, size=(1, 100))
-    state_drifted[1, :] = state_drifted[1] + state_drifted[5] + np.random.normal(0, sigma_y, size=(1, 100))
+    state_drifted[0, :] = state_drifted[0] + state_drifted[4] + np.round(np.random.normal(0, sigma_x, size=(1, 100)))
+    state_drifted[1, :] = state_drifted[1] + state_drifted[5] + np.round(np.random.normal(0, sigma_y, size=(1, 100)))
     #not sure abot this
-    state_drifted[4, :] = state_drifted[0] + state_drifted[4] + np.random.normal(0, sigma_x, size=(1, 100))
-    state_drifted[5, :] = state_drifted[1] + state_drifted[5] + np.random.normal(0, sigma_y, size=(1, 100))
+    state_drifted[4, :] =  state_drifted[4] + np.round(np.random.normal(0, sigma_vx, size=(1, 100)))
+    state_drifted[5, :] =  state_drifted[5] + np.round(np.random.normal(0, sigma_vy, size=(1, 100)))
     state_drifted = state_drifted.astype(int)
     return state_drifted
 
@@ -67,16 +71,24 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     """
     state = np.floor(state)
     state = state.astype(int)
-    hist = np.zeros(1, 16 * 16 * 16)
+    
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
-    
-    x,y,hight,widthe = state[0],state[1],state[2],state[3]
-    croped_image = image[ x- widthe: x + widthe, y- hight: y + hight,]
+    hist = np.zeros((16, 16 , 16))
+    max_higt,max_width,_ = image.shape
+
+    x,y,hight,widthe =state[0],state[1],state[2],state[3]
+    croped_image = image[ max(y- hight,1):min( y + hight,max_higt-1), max(x- widthe,1): min(x + widthe, max_width-1 ), :]
     # Using cv2.split() to split channels of coloured image 
     b,g,r = cv2.split(croped_image)
-    for i in range(len(croped_image [0])):
-        for j in range (len(croped_image[1])):
+    b = b//16
+    g = g//16
+    r = r//16
+    for i in range(len(croped_image )):
+        for j in range (len(croped_image[0])):
+            temp_b = b[i,j]
+            temp_r = r[i,j]
+            temp_g = g[i,j]
             hist[b[i,j],g[i,j],r[i,j]] +=1
     
 
@@ -85,7 +97,7 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     hist = np.reshape(hist, 16 * 16 * 16)
 
     # normalize
-    hist = hist/sum(hist)
+    hist = hist/np.sum(hist)
 
     return hist
 
@@ -102,10 +114,15 @@ def sample_particles(previous_state: np.ndarray, cdf: np.ndarray) -> np.ndarray:
     Return:
         s_next: np.ndarray. Sampled particles. shape: (6, N)
     """
-    S_next = np.zeros(previous_state.shape)
+    
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
-    return S_next
+    S_next = []
+    for i in range(len(cdf)):
+        r = np.random.uniform(0,1)
+        k = np.argmax(cdf>=r)
+        S_next.append(previous_state[:,k])
+    return np.array(S_next).T
 
 
 def bhattacharyya_distance(p: np.ndarray, q: np.ndarray) -> float:
@@ -118,10 +135,13 @@ def bhattacharyya_distance(p: np.ndarray, q: np.ndarray) -> float:
     Return:
         distance: float. The Bhattacharyya Distance.
     """
-    distance = 0
+    #distance = 0
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
-    return distance
+    #for i in range(len(p)):
+    #    distance+=np.sqrt(p[i]*q[i])
+
+    return np.exp(20*np.sum(np.sqrt(p*q)))
 
 
 def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_index: int, ID: str,
@@ -133,19 +153,26 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
     plt.title(ID + " - Frame mumber = " + str(frame_index))
 
     # Avg particle box
-    (x_avg, y_avg, w_avg, h_avg) = (0, 0, 0, 0)
+   
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
-
-
+    (x_avg, y_avg, w_avg, h_avg) = (0, 0, state[2][0]*2, state[3][0]*2)
+    for index,partical in enumerate(state.T):
+        x_avg = partical[0]* W[index]
+        y_avg = partical[1]* W[index]
+    x_avg = x_avg - w_avg/2
+    y_avg -= h_avg/2
     rect = patches.Rectangle((x_avg, y_avg), w_avg, h_avg, linewidth=1, edgecolor='g', facecolor='none')
     ax.add_patch(rect)
 
     # calculate Max particle box
-    (x_max, y_max, w_max, h_max) = (0, 0, 0, 0)
+    
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
-
+    (x_max, y_max, w_max, h_max) = (0, 0, state[2][0]*2, state[3][0]*2)
+    x_max , y_max,_,_,_,_= state.T[np.argmax(W)]
+    x_max = x_max - w_max/2
+    y_max -= h_max/2
     rect = patches.Rectangle((x_max, y_max), w_max, h_max, linewidth=1, edgecolor='r', facecolor='none')
     ax.add_patch(rect)
     plt.show(block=False)
@@ -155,6 +182,30 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
     frame_index_to_max_state[frame_index] = [float(x) for x in [x_max, y_max, w_max, h_max]]
     return frame_index_to_mean_state, frame_index_to_max_state
 
+def calculate_W (image,S,q):
+    '''
+    this method recives the image, the state, the histogram of the firs frame
+    and calculates the whigets accourdingly
+    '''
+    W = []
+    for col in S.T:
+        partical_hist = compute_normalized_histogram(image=image, state= col)
+        temp = bhattacharyya_distance(p= partical_hist,q= q)
+        W.append(bhattacharyya_distance(p= partical_hist,q= q))
+    W = np.array(W)
+    W = W/ np.sum(W)
+    return W
+
+def calculate_C (W):
+    '''
+    this function recives the whigthes and calculTE THE CDF
+    ''' 
+    c = np.zeros(len(W))
+    c[0]=W[0]
+    for i in range(1,len(W)):
+        c[i]+= W[i]+c[i-1]
+    return c
+ 
 
 def main():
     state_at_first_frame = np.matlib.repmat(s_initial, N, 1).T
@@ -163,13 +214,33 @@ def main():
     # LOAD FIRST IMAGE
     image = cv2.imread(os.path.join(IMAGE_DIR_PATH, "001.png"))
 
+    '''
+    %%%%%%%%%%%% delete THIS####################
+    
+
+    fig, ax = plt.subplots(1)
+    image = image[:,:,::-1]
+    plt.imshow(image)
+    plt.title(ID + " - Frame mumber = " )
+    x_avg, y_avg, w_avg, h_avg = s_initial[0],s_initial[1],s_initial[2]*2,s_initial[3]*2
+    x_avg = x_avg - w_avg/2
+    y_avg = y_avg - h_avg/2
+
+    rect = patches.Rectangle((x_avg, y_avg), w_avg, h_avg, linewidth=1, edgecolor='g', facecolor='none')
+    ax.add_patch(rect)
+    plt.show(block=False)
+    '''
+    ###########################
+
+
     # COMPUTE NORMALIZED HISTOGRAM
     q = compute_normalized_histogram(image, s_initial)
 
     # COMPUTE NORMALIZED WEIGHTS (W) AND PREDICTOR CDFS (C)
     # YOU NEED TO FILL THIS PART WITH CODE:
     """INSERT YOUR CODE HERE."""
-
+    W = calculate_W(image=image,S=S,q=q)
+    C=calculate_C(W)
     images_processed = 1
 
     # MAIN TRACKING LOOP
@@ -194,6 +265,8 @@ def main():
         # COMPUTE NORMALIZED WEIGHTS (W) AND PREDICTOR CDFS (C)
         # YOU NEED TO FILL THIS PART WITH CODE:
         """INSERT YOUR CODE HERE."""
+        W = calculate_W(image=current_image,S=S,q=q)
+        C=calculate_C(W)
 
         # CREATE DETECTOR PLOTS
         images_processed += 1
