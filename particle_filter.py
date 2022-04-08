@@ -29,10 +29,10 @@ s_initial = [297,    # x center
                0]    # velocity y
 
 
-sigma_x =2.5
-sigma_y =2.5
-sigma_vx =0.8
-sigma_vy =0.8
+sigma_x =1
+sigma_y =0.5
+sigma_vx =1
+sigma_vy =0.2
 
 def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """Progress the prior state with time and add noise.
@@ -49,12 +49,15 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     state_drifted = s_prior
     """ DELETE THE LINE ABOVE AND:
     INSERT YOUR CODE HERE."""
-    # we just add noise to the current state
-    state_drifted[0, :] = state_drifted[0] + state_drifted[4] + np.round(np.random.normal(0, sigma_x, size=(1, 100)))
-    state_drifted[1, :] = state_drifted[1] + state_drifted[5] + np.round(np.random.normal(0, sigma_y, size=(1, 100)))
+    #first we applay the motion
+    state_drifted[:2, :] = state_drifted[:2, :] + state_drifted[4:, :]
+
+    # now we add the noise
+    state_drifted[:1, : ] = state_drifted[:1, : ] + np.round(np.random.normal(0, sigma_x, size=(1, 100)))
+    state_drifted[1:2, :] = state_drifted[1:2, :] + np.round(np.random.normal(0, sigma_y, size=(1, 100)))
     #not sure abot this
-    state_drifted[4, :] =  state_drifted[4] + np.round(np.random.normal(0, sigma_vx, size=(1, 100)))
-    state_drifted[5, :] =  state_drifted[5] + np.round(np.random.normal(0, sigma_vy, size=(1, 100)))
+    state_drifted[4:5, :] =  state_drifted[4:5, :]+  np.round(np.random.normal(0, sigma_vx, size=(1, 100))) #
+    state_drifted[5:6, :] = state_drifted[5:6, :] +  np.round(np.random.normal(0, sigma_vy, size=(1, 100))) #
     state_drifted = state_drifted.astype(int)
     return state_drifted
 
@@ -94,7 +97,7 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
 
 
 
-    hist = hist.flatten() #np.reshape(hist, 16 * 16 * 16)
+    hist = hist.flatten() #np.reshape(hist, 16 * 16 * 16)  #
 
     # normalize
     hist = hist/np.sum(hist)
@@ -121,6 +124,7 @@ def sample_particles(previous_state: np.ndarray, cdf: np.ndarray) -> np.ndarray:
     for i in range(len(cdf)):
         r = np.random.uniform(0,1)
         k = np.argmax(cdf>=r)
+        temp = previous_state[:,k]
         S_next.append(previous_state[:,k])
     return np.array(S_next).T
 
@@ -135,13 +139,14 @@ def bhattacharyya_distance(p: np.ndarray, q: np.ndarray) -> float:
     Return:
         distance: float. The Bhattacharyya Distance.
     """
-    #distance = 0
+    distance = 0
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
-    #for i in range(len(p)):
-    #    distance+=np.sqrt(p[i]*q[i])
+    for i in range(len(p)):
+        distance+=np.sqrt(p[i]*q[i])
+    distance = np.exp(20*distance)
 
-    return np.exp(20*np.sum(np.sqrt(p*q)))
+    return distance #np.exp(20 * np.sum(np.sqrt(p * q)))
 
 
 def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_index: int, ID: str,
@@ -151,6 +156,7 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
     image = image[:,:,::-1]
     plt.imshow(image)
     plt.title(ID + " - Frame mumber = " + str(frame_index))
+    plt.show(block=False)
 
     # Avg particle box
    
@@ -158,6 +164,14 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
         INSERT YOUR CODE HERE."""
     (x_avg, y_avg, w_avg, h_avg) = (0, 0, state[2][0]*2, state[3][0]*2)
     for index,partical in enumerate(state.T):
+        '''
+        DLETE THIS
+        '''
+        shuff = W[index]
+        temp_x =partical[0] - w_avg/2
+        temp_y = partical[1] - h_avg/2
+        rect = patches.Rectangle((temp_x, temp_y), w_avg, h_avg, linewidth=1, edgecolor='y', facecolor='none')
+        ax.add_patch(rect)
         x_avg += partical[0]* W[index]
         y_avg += partical[1]* W[index]
     x_avg = x_avg - w_avg/2
@@ -271,6 +285,8 @@ def main():
 
         # CREATE DETECTOR PLOTS
         images_processed += 1
+        #$$$$ DELETE THIS CHANGE%%%%%%%%########
+        #if 0 == images_processed%10:
         if 0 == images_processed%10:
             frame_index_to_avg_state, frame_index_to_max_state = show_particles(
                 current_image, S, W, images_processed, ID, frame_index_to_avg_state, frame_index_to_max_state)
