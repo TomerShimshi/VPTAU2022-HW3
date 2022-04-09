@@ -29,10 +29,10 @@ s_initial = [297,    # x center
                0]    # velocity y
 
 
-sigma_x =1
-sigma_y =0.5
-sigma_vx =1
-sigma_vy =0.2
+sigma_x =5
+sigma_y =1.5
+sigma_vx =0
+sigma_vy =0
 
 def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """Progress the prior state with time and add noise.
@@ -77,6 +77,7 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
+    
     hist = np.zeros((16, 16 , 16))
     max_higt,max_width,_ = image.shape
 
@@ -87,8 +88,13 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     b = b//16
     g = g//16
     r = r//16
-    for i in range(len(croped_image )):
-        for j in range (len(croped_image[0])):
+    temp_range = [i for i in range(16)]
+    temp_hist_b = np.histogram(b,temp_range)
+    temp_hist_r= np.histogram(r,temp_range) 
+    temp_hist_g= np.histogram(g,temp_range) 
+    temp = croped_image.shape
+    for i in range(temp[0] ):
+        for j in range (temp[1]):
             temp_b = b[i,j]
             temp_r = r[i,j]
             temp_g = g[i,j]
@@ -97,13 +103,34 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
 
 
 
-    hist = hist.flatten() #np.reshape(hist, 16 * 16 * 16)  #
+    hist = np.reshape(hist, 16 * 16 * 16)  #hist.flatten() #
 
     # normalize
     hist = hist/np.sum(hist)
 
     return hist
+    '''
+    x, y, width, height, x_vel, y_vel = s_initial
 
+    temp_image = image[y - height:y + height, x - width:x + width]
+
+    b, g, r = cv2.split(temp_image)
+
+    b //= 16
+    g //= 16
+    r //= 16
+
+    histogram = np.zeros((16, 16, 16))
+
+    for i in range(len(temp_image)):
+        for j in range(len(temp_image[0])):
+            histogram[b[i, j]][g[i, j]][r[i, j]] += 1
+
+    histogram = histogram.reshape((4096, 1))
+    histogram /= np.sum(histogram)
+
+    return histogram
+    '''
 
 def sample_particles(previous_state: np.ndarray, cdf: np.ndarray) -> np.ndarray:
     """Sample particles from the previous state according to the cdf.
