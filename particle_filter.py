@@ -89,21 +89,31 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     g = g//16
     r = r//16
     temp_range = [i for i in range(16)]
-    temp_hist_b = np.histogram(b,temp_range)
-    temp_hist_r= np.histogram(r,temp_range) 
-    temp_hist_g= np.histogram(g,temp_range) 
+    temp_hist_b = np.histogram(b,temp_range)[0]
+    temp_hist_r= np.histogram(r,temp_range)[0]
+    temp_hist_g= np.histogram(g,temp_range)[0]
+    #hist = np.concatenate((temp_hist_b,temp_hist_g,temp_hist_r))
     temp = croped_image.shape
+    '''
+    for i in range(16):
+        for j in range(16):
+            for k in range(16):
+                hist[i][j][k]=
+    '''
+    
     for i in range(temp[0] ):
         for j in range (temp[1]):
             temp_b = b[i,j]
             temp_r = r[i,j]
             temp_g = g[i,j]
             hist[b[i,j]][g[i,j]][r[i,j]] +=1
-    
+    '''
+    colors = ('b','g','r')
+    for i,color in enumerate(colors):
+        hist = cv2.calcHist([croped_image],[i],None,[16],[0,16])
+    '''
 
-
-
-    hist = np.reshape(hist, 16 * 16 * 16)  #hist.flatten() #
+    hist = hist.reshape((16*16*16,1))#np.reshape(hist, 16 * 16 * 16)  #hist.flatten() #
 
     # normalize
     hist = hist/np.sum(hist)
@@ -169,11 +179,11 @@ def bhattacharyya_distance(p: np.ndarray, q: np.ndarray) -> float:
     distance = 0
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
-    for i in range(len(p)):
-        distance+=np.sqrt(p[i]*q[i])
-    distance = np.exp(20*distance)
+    #for i in range(len(p)):
+    #    distance+=np.sqrt(p[i]*q[i])
+    #distance = np.exp(20*distance)
 
-    return distance #np.exp(20 * np.sum(np.sqrt(p * q)))
+    return np.exp(20 * np.sum(np.sqrt(p * q))) #distance #
 
 
 def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_index: int, ID: str,
@@ -197,8 +207,8 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
         shuff = W[index]
         temp_x =partical[0] - w_avg/2
         temp_y = partical[1] - h_avg/2
-        rect = patches.Rectangle((temp_x, temp_y), w_avg, h_avg, linewidth=1, edgecolor='y', facecolor='none')
-        ax.add_patch(rect)
+       # rect = patches.Rectangle((temp_x, temp_y), w_avg, h_avg, linewidth=1, edgecolor='y', facecolor='none')
+       # ax.add_patch(rect)
         x_avg += partical[0]* W[index]
         y_avg += partical[1]* W[index]
     x_avg = x_avg - w_avg/2
@@ -314,7 +324,7 @@ def main():
         images_processed += 1
         #$$$$ DELETE THIS CHANGE%%%%%%%%########
         #if 0 == images_processed%10:
-        if 0 == images_processed%10:
+        if 0 == images_processed%2:
             frame_index_to_avg_state, frame_index_to_max_state = show_particles(
                 current_image, S, W, images_processed, ID, frame_index_to_avg_state, frame_index_to_max_state)
 
