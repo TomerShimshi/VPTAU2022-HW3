@@ -29,10 +29,6 @@ s_initial = [297,    # x center
                0]    # velocity y
 
 
-sigma_x =5
-sigma_y =1.5
-sigma_vx =0
-sigma_vy =0
 
 def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """Progress the prior state with time and add noise.
@@ -49,6 +45,11 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     state_drifted = s_prior
     """ DELETE THE LINE ABOVE AND:
     INSERT YOUR CODE HERE."""
+    sigma_x =5
+    sigma_y =1.5
+    sigma_vx =0.5
+    sigma_vy =0.2
+
     #first we applay the motion
     state_drifted[:2, :] = state_drifted[:2, :] + state_drifted[4:, :]
 
@@ -211,7 +212,7 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
        # ax.add_patch(rect)
         x_avg += partical[0]* W[index]
         y_avg += partical[1]* W[index]
-    x_avg = x_avg - w_avg/2
+    x_avg = x_avg - w_avg
     y_avg -= h_avg/2
     rect = patches.Rectangle((x_avg, y_avg), w_avg, h_avg, linewidth=1, edgecolor='g', facecolor='none')
     ax.add_patch(rect)
@@ -222,7 +223,7 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
         INSERT YOUR CODE HERE."""
     (x_max, y_max, w_max, h_max) = (0, 0, state[2][0]*2, state[3][0]*2)
     x_max , y_max,_,_,_,_= state.T[np.argmax(W)]
-    x_max = x_max - w_max/2
+    x_max = x_max - w_max
     y_max -= h_max/2
     rect = patches.Rectangle((x_max, y_max), w_max, h_max, linewidth=1, edgecolor='r', facecolor='none')
     ax.add_patch(rect)
