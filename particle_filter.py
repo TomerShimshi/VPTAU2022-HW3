@@ -45,10 +45,10 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     state_drifted = s_prior
     """ DELETE THE LINE ABOVE AND:
     INSERT YOUR CODE HERE."""
-    sigma_x =3
-    sigma_y =1.5
-    sigma_vx =0.8
-    sigma_vy = 0.1
+    sigma_x =2#7
+    sigma_y =2#2
+    sigma_vx =0.8#0.2
+    sigma_vy = 0.8#0.1
     #first we applay the motion
     #state_drifted[:2, :] = state_drifted[:2, :] + state_drifted[4:, :]
     state_drifted[:1, : ]= state_drifted[:1, : ]+ state_drifted[4, :]
@@ -82,7 +82,7 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     hist = np.zeros((16, 16 , 16))
     max_higt,max_width,_ = image.shape
 
-    x,y,hight,widthe =state[0],state[1],state[2],state[3]
+    x,y,hight,widthe =state[0],state[1],state[3],state[2]
     croped_image = image[ max(y- hight,1):min( y + hight,max_higt-1), max(x- widthe,1): min(x + widthe, max_width-1 )]
     # Using cv2.split() to split channels of coloured image 
     b,g,r = cv2.split(croped_image)
@@ -191,7 +191,7 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
        # ax.add_patch(rect)
         x_avg += partical[0]* W[index]
         y_avg += partical[1]* W[index]
-    x_avg = x_avg - w_avg
+    x_avg = x_avg - w_avg/2
     y_avg -= h_avg/2
     rect = patches.Rectangle((x_avg, y_avg), w_avg, h_avg, linewidth=1, edgecolor='g', facecolor='none')
     ax.add_patch(rect)
@@ -202,7 +202,7 @@ def show_particles(image: np.ndarray, state: np.ndarray, W: np.ndarray, frame_in
         INSERT YOUR CODE HERE."""
     (x_max, y_max, w_max, h_max) = (0, 0, state[2][0]*2, state[3][0]*2)
     x_max , y_max,_,_,_,_= state.T[np.argmax(W)]
-    x_max = x_max - w_max
+    x_max = x_max - w_max/2
     y_max -= h_max/2
     rect = patches.Rectangle((x_max, y_max), w_max, h_max, linewidth=1, edgecolor='r', facecolor='none')
     ax.add_patch(rect)
