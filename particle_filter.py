@@ -29,10 +29,7 @@ s_initial = [297,    # x center
                0]    # velocity y
 
 
-sigma_x =5
-sigma_y =1.5
-sigma_vx =0
-sigma_vy =0
+
 
 def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     """Progress the prior state with time and add noise.
@@ -45,13 +42,18 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     Return:
         state_drifted: np.ndarray. The prior state after drift (applying the motion model) and adding the noise.
     """
-    s_prior = s_prior.astype(float)
+    #s_prior = s_prior.astype(float)
     state_drifted = s_prior
     """ DELETE THE LINE ABOVE AND:
     INSERT YOUR CODE HERE."""
+    sigma_x =3
+    sigma_y =1.5
+    sigma_vx =0.5
+    sigma_vy = 0.1
     #first we applay the motion
-    state_drifted[:2, :] = state_drifted[:2, :] + state_drifted[4:, :]
-
+    #state_drifted[:2, :] = state_drifted[:2, :] + state_drifted[4:, :]
+    state_drifted[:1, : ]= state_drifted[:1, : ]+ state_drifted[4, :]
+    state_drifted[1:2, :]= state_drifted[1:2, :]+ state_drifted[5, :]
     # now we add the noise
     state_drifted[:1, : ] = state_drifted[:1, : ] + np.round(np.random.normal(0, sigma_x, size=(1, 100)))
     state_drifted[1:2, :] = state_drifted[1:2, :] + np.round(np.random.normal(0, sigma_y, size=(1, 100)))
@@ -72,8 +74,8 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     Return:
         hist: np.ndarray. histogram of quantized colors.
     """
-    state = np.floor(state)
-    state = state.astype(int)
+    #state = np.floor(state)
+    #state = state.astype(int)
     
     """ DELETE THE LINE ABOVE AND:
         INSERT YOUR CODE HERE."""
@@ -119,28 +121,7 @@ def compute_normalized_histogram(image: np.ndarray, state: np.ndarray) -> np.nda
     hist = hist/np.sum(hist)
 
     return hist
-    '''
-    x, y, width, height, x_vel, y_vel = s_initial
-
-    temp_image = image[y - height:y + height, x - width:x + width]
-
-    b, g, r = cv2.split(temp_image)
-
-    b //= 16
-    g //= 16
-    r //= 16
-
-    histogram = np.zeros((16, 16, 16))
-
-    for i in range(len(temp_image)):
-        for j in range(len(temp_image[0])):
-            histogram[b[i, j]][g[i, j]][r[i, j]] += 1
-
-    histogram = histogram.reshape((4096, 1))
-    histogram /= np.sum(histogram)
-
-    return histogram
-    '''
+   
 
 def sample_particles(previous_state: np.ndarray, cdf: np.ndarray) -> np.ndarray:
     """Sample particles from the previous state according to the cdf.
@@ -324,7 +305,7 @@ def main():
         images_processed += 1
         #$$$$ DELETE THIS CHANGE%%%%%%%%########
         #if 0 == images_processed%10:
-        if 0 == images_processed%2:
+        if 0 == images_processed%10:
             frame_index_to_avg_state, frame_index_to_max_state = show_particles(
                 current_image, S, W, images_processed, ID, frame_index_to_avg_state, frame_index_to_max_state)
 
