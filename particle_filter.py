@@ -45,7 +45,7 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     state_drifted = s_prior
     """ DELETE THE LINE ABOVE AND:
     INSERT YOUR CODE HERE."""
-    sigma_x =2#7
+    sigma_x =2.5#7
     sigma_y =2#2
     sigma_vx =0.8#0.2
     sigma_vy = 0.8#0.1
