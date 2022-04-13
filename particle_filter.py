@@ -10,7 +10,7 @@ import matplotlib.patches as patches
 
 # change IDs to your IDs.
 ID1 = "203200480"
-ID2 = "987654321"
+ID2 = "320521461"
 
 ID = "HW3_{0}_{1}".format(ID1, ID2)
 RESULTS = 'results'
@@ -47,7 +47,7 @@ def predict_particles(s_prior: np.ndarray) -> np.ndarray:
     INSERT YOUR CODE HERE."""
     sigma_x =2.5#7
     sigma_y =2#2
-    sigma_vx =0.8#0.2
+    sigma_vx =1#0.2
     sigma_vy = 0.8#0.1
     #first we applay the motion
     #state_drifted[:2, :] = state_drifted[:2, :] + state_drifted[4:, :]
